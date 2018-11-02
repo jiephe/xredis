@@ -10,6 +10,20 @@
 #include <sstream>
 using namespace xrc;
 
+bool xRedisClient::zadd(uint32_t idx, const KEY& deskey, const VALUES& vValues, int64_t& count, std::string& err) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	if (!zadd(dbi, deskey, vValues, count)) {
+		if (dbi.GetErrInfo())
+			err = dbi.GetErrInfo();
+		return false;
+	}
+
+	return true;
+}
+
+
 bool xRedisClient::zadd(const RedisDBIdx& dbi, const KEY& key,   const VALUES& vValues, int64_t& count){
     VDATA vCmdData;
     vCmdData.push_back("ZADD");
@@ -46,12 +60,37 @@ bool xRedisClient::zrange(const RedisDBIdx& dbi, const std::string& key, int32_t
     return command_list(dbi, vValues, "ZRANGE %s %d %d", key.c_str(), start, end);
 }
 
+bool xRedisClient::zrangebyscore(uint32_t idx, const std::string& key, int32_t start, int32_t end, VALUES& vValues, bool withscore) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return zrangebyscore(dbi, key, start, end, vValues, withscore);
+}
+
+bool xRedisClient::zrangebyscore(const RedisDBIdx& dbi, const std::string& key, int32_t start, int32_t end, VALUES& vValues, bool withscore) {
+	if (0 == key.length()) {
+		return false;
+	}
+	SETDEFAULTIOTYPE(SLAVE);
+	if (withscore) {
+		return command_list(dbi, vValues, "ZRANGEBYSCORE %s %d %d %s", key.c_str(), start, end, "WITHSCORES");
+	}
+	return command_list(dbi, vValues, "ZRANGEBYSCORE %s %d %d", key.c_str(), start, end);
+}
+
 bool xRedisClient::zrank(const RedisDBIdx& dbi, const std::string& key, const std::string& member, int64_t &rank) {
     if (0==key.length()) {
         return false;
     }
     SETDEFAULTIOTYPE(MASTER);
     return command_integer(dbi, rank, "ZRANK %s %s", key.c_str(), member.c_str());
+}
+
+bool xRedisClient::zrem(uint32_t idx, const KEY& key, const VALUES& vmembers, int64_t &num) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return zrem(dbi, key, vmembers, num);
 }
 
 bool xRedisClient::zrem(const RedisDBIdx& dbi,        const KEY& key, const VALUES& vmembers, int64_t &count) {

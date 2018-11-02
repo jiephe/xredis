@@ -28,6 +28,13 @@ bool xRedisClient::linsert(const RedisDBIdx& dbi, const std::string& key, const 
     return command_integer(dbi, retval, "LINSERT %s %s %s %s", key.c_str(), lmodel[mod], pivot.c_str(), value.c_str());
 }
 
+bool xRedisClient::llen(uint32_t idx, const std::string& key, int64_t& len) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return llen(dbi, key, len);
+}
+
 bool xRedisClient::llen(const RedisDBIdx& dbi, const std::string& key, int64_t& retval){
     if (0==key.length()) {
         return false;
@@ -69,6 +76,13 @@ bool xRedisClient::lpop(const RedisDBIdx& dbi, const std::string& key, std::stri
     }
     SETDEFAULTIOTYPE(MASTER);
     return command_string(dbi, value, "LPOP %s", key.c_str());
+}
+
+bool xRedisClient::lpush(uint32_t idx, const std::string& key, const VALUES& vValue, int64_t& length) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return lpush(dbi, key, vValue, length);
 }
 
 bool xRedisClient::lpush(const RedisDBIdx& dbi, const std::string& key, const VALUES& vValue, int64_t& length){
@@ -113,6 +127,13 @@ bool xRedisClient::ltrim(const RedisDBIdx& dbi, const std::string& key, int32_t 
     }
     SETDEFAULTIOTYPE(MASTER);
     return command_status(dbi, "LTRIM %s %d %d", key.c_str(), start, end);
+}
+
+bool xRedisClient::rpop(uint32_t idx, const std::string& key, std::string& value) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return rpop(dbi, key, value);
 }
 
 bool xRedisClient::rpop(const RedisDBIdx& dbi, const std::string& key, std::string& value){

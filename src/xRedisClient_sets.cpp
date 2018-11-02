@@ -9,6 +9,13 @@
 #include "xRedisClient.h"
 using namespace xrc;
 
+bool xRedisClient::sadd(uint32_t idx, const KEY& key, const VALUES& vValue, int64_t& count) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return sadd(dbi, key, vValue, count);
+}
+
 bool xRedisClient::sadd(const RedisDBIdx& dbi,     const std::string& key, const VALUES& vValue, int64_t& count){
     VDATA vCmdData;
     vCmdData.push_back("SADD");
@@ -16,6 +23,13 @@ bool xRedisClient::sadd(const RedisDBIdx& dbi,     const std::string& key, const
     addparam(vCmdData, vValue);
     SETDEFAULTIOTYPE(MASTER);
     return commandargv_integer(dbi, vCmdData, count);
+}
+
+bool xRedisClient::scard(uint32_t idx, const KEY& key, int64_t& count) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return scard(dbi, key, count);
 }
 
 bool xRedisClient::scard(const RedisDBIdx& dbi,     const std::string& key, int64_t& count){
@@ -105,6 +119,13 @@ bool xRedisClient::sismember(const RedisDBIdx& dbi,  const KEY& key,   const VAL
     return command_bool(dbi, "SISMEMBER %s %s", key.c_str(), member.c_str());
 }
 
+bool xRedisClient::smembers(uint32_t idx, const KEY& key, VALUES& vValue) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return smembers(dbi, key, vValue);
+}
+
 bool xRedisClient::smembers(const RedisDBIdx& dbi,  const KEY& key, VALUES& vValue){
     if (0==key.length()) {
         return false;
@@ -119,6 +140,13 @@ bool xRedisClient::smove(const RedisDBIdx& dbi,  const KEY& srckey, const KEY& d
     }
     SETDEFAULTIOTYPE(MASTER);
     return command_bool(dbi, "SMOVE %s", srckey.c_str(), deskey.c_str(), member.c_str());
+}
+
+bool xRedisClient::spop(uint32_t idx, const KEY& key, VALUE& member) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return spop(dbi, key, member);
 }
 
 bool xRedisClient::spop(const RedisDBIdx& dbi,  const KEY& key, VALUE& member){
@@ -140,6 +168,13 @@ bool xRedisClient::srandmember(const RedisDBIdx& dbi,  const KEY& key, VALUES& m
     return command_list(dbi, members, "SRANDMEMBER %s %d", key.c_str(), count);
 }
 
+bool xRedisClient::srem(uint32_t idx, const KEY& key, const VALUES& vmembers, int64_t& count) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return srem(dbi, key, vmembers, count);
+}
+
 bool xRedisClient::srem(const RedisDBIdx& dbi,  const KEY& key, const VALUES& vmembers, int64_t& count){
     if (0==key.length()) {
         return false;
@@ -150,6 +185,33 @@ bool xRedisClient::srem(const RedisDBIdx& dbi,  const KEY& key, const VALUES& vm
     vCmdData.push_back(key);
     addparam(vCmdData, vmembers);
     return commandargv_integer(dbi, vCmdData, count);
+}
+
+bool xRedisClient::sscan(uint32_t idx, const std::string& key, const char *pattern, uint32_t count, ArrayReply& array) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	int64_t cursor = 0;
+	xRedisContext ctx;
+	GetxRedisContext(dbi, &ctx);
+
+	bool bRet = true;
+
+	array.clear();
+	do
+	{
+		if (sscan(dbi, key, cursor, pattern, count, array, ctx)) {
+
+		}
+		else {
+			bRet = false;
+			break;
+		}
+	} while (cursor != 0);
+
+	FreexRedisContext(&ctx);
+
+	return bRet;
 }
 
 bool xRedisClient::sscan(const RedisDBIdx& dbi, const std::string& key, int64_t &cursor, const char *pattern, 

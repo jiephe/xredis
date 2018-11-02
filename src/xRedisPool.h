@@ -67,6 +67,7 @@ public:
     
 private:
     bool auth();
+	bool select(uint32_t index);
     redisContext * ConnectWithTimeout();
 
 private:

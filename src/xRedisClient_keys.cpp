@@ -11,6 +11,13 @@
 #include <sstream>
 using namespace xrc;
 
+bool xRedisClient::del(uint32_t idx, const std::string& key) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return del(dbi, key);
+}
+
 bool  xRedisClient::del(const RedisDBIdx& dbi, const std::string& key) {
     if (0==key.length()) {
         return false;
@@ -37,12 +44,26 @@ bool  xRedisClient::del(const DBIArray& vdbi,    const KEYS &  vkey, int64_t& co
     return true;
 }
 
+bool xRedisClient::exists(uint32_t idx, const std::string& key) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return exists(dbi, key);
+}
+
 bool xRedisClient::exists(const RedisDBIdx& dbi, const std::string& key) {
     if (0==key.length()) {
         return false;
     }
     SETDEFAULTIOTYPE(MASTER);
     return command_bool(dbi, "EXISTS %s", key.c_str());
+}
+
+bool xRedisClient::expire(uint32_t idx, const std::string& key, uint32_t second) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return expire(dbi, key, second);
 }
 
 bool xRedisClient::expire(const RedisDBIdx& dbi, const std::string& key, uint32_t second) {
@@ -118,6 +139,49 @@ bool xRedisClient::type(const RedisDBIdx& dbi, const std::string& key, std::stri
 bool xRedisClient::randomkey(const RedisDBIdx& dbi, KEY& key){
     SETDEFAULTIOTYPE(SLAVE);
     return command_string(dbi, key, "RANDOMKEY");
+}
+
+bool xRedisClient::rename(uint32_t idx, const std::string& key, const std::string& value) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	return rename(dbi, key, value);
+}
+
+bool xRedisClient::rename(const RedisDBIdx& dbi, const std::string& key, const std::string& value) {
+	VDATA vCmdData;
+	vCmdData.push_back("RENAME");
+	vCmdData.push_back(key);
+	vCmdData.push_back(value);
+	SETDEFAULTIOTYPE(MASTER);
+	return commandargv_status(dbi, vCmdData);
+}
+
+bool xRedisClient::scan(uint32_t idx, const char *pattern, uint32_t count, ArrayReply& array) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	int64_t cursor = 0;
+	xRedisContext ctx;
+	GetxRedisContext(dbi, &ctx);
+
+	bool bRet = true;
+
+	array.clear();
+	do
+	{
+		if (scan(dbi, cursor, pattern, count, array, ctx)) {
+
+		}
+		else {
+			bRet = false;
+			break;
+		}
+	} while (cursor != 0);
+
+	FreexRedisContext(&ctx);
+
+	return bRet;
 }
 
 bool xRedisClient::scan(const RedisDBIdx& dbi, int64_t &cursor, const char *pattern, 

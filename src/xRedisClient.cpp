@@ -35,6 +35,15 @@ RedisDBIdx::~RedisDBIdx() {
     }
 }
 
+void RedisDBIdx::init(xRedisClient *xredisclient, uint32_t dbindex, uint32_t type) {
+	mType = type;
+	mIndex = dbindex;
+	mStrerr = NULL;
+	mClient = xredisclient;
+	mIOtype = MASTER;
+	mIOFlag = false;
+}
+
 bool RedisDBIdx::CreateDBIndex(const char *key,  HASHFUN fun, const uint32_t type) {
     uint32_t hashbase = mClient->GetRedisPool()->getHashBase(type);
     if ((NULL!=fun) && (hashbase>0)) {

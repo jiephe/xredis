@@ -26,6 +26,19 @@ bool xRedisClient::append(const RedisDBIdx& dbi, const std::string& key, const s
     return commandargv_status(dbi, vCmdData);
 }
 
+bool xRedisClient::set(uint32_t idx, const std::string& key, const std::string& value, std::string& err) {
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+
+	if (!set(dbi, key, value)) {
+		if (dbi.GetErrInfo())
+			err = dbi.GetErrInfo();
+		return false;
+	}
+
+	return true;
+}
+
 bool xRedisClient::set(const RedisDBIdx& dbi, const std::string& key, const std::string& value) {
     VDATA vCmdData;
     vCmdData.push_back("SET");
@@ -68,6 +81,21 @@ bool xRedisClient::set(const RedisDBIdx& dbi, const std::string& key, const char
 bool xRedisClient::setbit(const RedisDBIdx& dbi, const std::string& key, int32_t offset, int64_t newbitValue, int64_t oldbitValue) {
     SETDEFAULTIOTYPE(MASTER);
     return command_integer(dbi, oldbitValue, "SETBIT %s %d %lld", key.c_str(), offset, newbitValue);
+}
+
+bool xRedisClient::get(uint32_t idx, const std::string& key, std::string& value, std::string& err) {
+	value.clear();
+	
+	RedisDBIdx dbi(this);
+	dbi.init(this, idx, CACHE_TYPE_1);
+	
+	 if (!get(dbi, key, value)) {
+		 if (dbi.GetErrInfo())
+			 err = dbi.GetErrInfo();
+		 return false;
+	 }
+
+	 return true;
 }
 
 bool xRedisClient::get(const RedisDBIdx& dbi, const std::string& key, std::string& value) {

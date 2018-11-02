@@ -194,6 +194,22 @@ bool RedisConn::auth()
     return bRet;
 }
 
+bool RedisConn::select(uint32_t index)
+{
+	bool bRet = false;
+
+	redisReply *reply = static_cast<redisReply *>(redisCommand(mCtx, "select %u", index));
+	if ((NULL == reply) || (strcasecmp(reply->str, "OK") != 0)) {
+		bRet = false;
+	}
+	else {
+		bRet = true;
+	}
+	freeReplyObject(reply);
+	
+	return bRet;
+}
+
 bool RedisConn::RedisConnect()
 {
     bool bRet = false;
@@ -206,7 +222,7 @@ bool RedisConn::RedisConnect()
     if (NULL==mCtx) {
         bRet = false;
     } else {
-        bRet = auth() && Ping();
+        bRet = auth() && Ping() && select(mDbindex);
         mConnStatus = bRet;
     }
 
@@ -226,7 +242,7 @@ bool RedisConn::RedisReConnect()
     } else {
         redisFree(mCtx);
         mCtx = tmp_ctx;
-        bRet = auth();
+        bRet = auth() && select(mDbindex);
     }
 
     mConnStatus = bRet;
